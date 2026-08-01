@@ -1,0 +1,39 @@
+@startuml BankStandart_Container
+title Банк «Стандарт» - Диаграмма контейнеров - Передача ставок в кол-центр
+
+top to bottom direction
+
+!define RELATIVE_INCLUDE .
+!include ./c4-templates/C4_Container.puml
+'!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+
+Person(call_center_man, "Сотрудник кол-центра банка «Стандарт»", "Выполняет консультирование клиентов по ставкам")
+
+System_Boundary(bank_standart, "Банк «Стандарт»") {  
+    Container(kafka, "Kafka", "Kafka", "Брокер сообщений")
+
+    Container(deposit_service, "Сервис данных депозитов", "Go", "Хранит предложения по депозитам для разгрузки АБС")
+
+    Container(call_center_wabapp, "WEB приложение системы кол-центра", "React.js", "")
+    Container(call_center_sys, "Система кол-центра", "Java Spring Boot", "")
+    Container(call_center_db, "БД системы кол-центра", "PostgreSQL", "")
+
+    Container(smtp_service, "SMTP сервер", "", "Служит для отправки Email")
+}
+
+System_Ext(partner_call_center_email, "Потчовый сервер партнерского кол-центра", "")
+
+Lay_L(bank_standart, partner_call_center_email)
+
+Rel(deposit_service, smtp_service, "Актуальные ставки по депозитам в Excel файле", "")
+Rel(smtp_service, partner_call_center_email, "Актуальные ставки по депозитам в Excel файле", "")
+
+Rel(deposit_service, kafka, "Актуальные ставки по депозитам", "")
+Rel(kafka, call_center_sys, "Актуальные ставки по депозитам", "")
+
+Rel(call_center_man, call_center_wabapp, "Просмотр данных по ставкам по депозитам", "")
+Rel(call_center_wabapp, call_center_sys, "Запрос ставок по депозитам", "HTTPS/REST")
+note right of call_center_wabapp: API Gateway опущен для простоты
+Rel(call_center_sys, call_center_db, "Управление данными", "")
+
+@enduml

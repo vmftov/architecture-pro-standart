@@ -52,6 +52,8 @@ Lay_R(bank_standart, front_office_man)
 Lay_R(bank_standart, deposit_office_man)
 Lay_R(bank_standart, credit_office_man)
 
+Lay_R(kafka, deposit_req_service)
+
 Rel(new_client, site_webapp, "Просмотр предложений по депозитам,\nПодача заявки на открытие депозита", "")
 Rel(site_webapp, api_gateway, "Запросы клиента", "HTTPS/REST")
 Rel(api_gateway, deposit_req_service, "Заявка на открытие депозита,\nКод подтверждения открытия депозита", "")
@@ -71,6 +73,7 @@ Rel(deposit_req_service, deposit_req_db, "Сохранение и управле
 Rel(deposit_req_service, kafka, "Заявка на открытие депозита", "")
 Rel(deposit_req_service, sms_service, "Код подтверждения открытия депозита", "")
 note left of deposit_req_service: Статус клиента (новый, старый) и телефон текущего клиента берутся из запроса/токена без обращения к АБС
+Rel(kafka, deposit_req_service, "Подтверждение обработки заявки на открытие депозита кол-центром", "")
 
 Rel(deposit_service, deposit_db, "Управление данными", "")
 
@@ -93,6 +96,7 @@ Rel(call_center_wabapp, api_gateway, "Запросы сотрудника", "HTT
 Rel(api_gateway, call_center_sys, "Загрузка данных для WEB-приложения кол-центра", "")
 Rel(call_center_sys, call_center_db, "Управление данными", "")
 Rel(kafka, call_center_sys, "Заявка на открытие депозита", "")
-Rel(call_center_sys, abs, "Заявка на открытие депозита от новых клиентов", "")
+Rel(call_center_sys, kafka, "Подтверждение обработки заявки на открытие депозита кол-центром", "")
+Rel(call_center_sys, abs, "Данные (черновик) заявки на открытие депозита от новых клиентов для сотрудников фронт-офиса", "")
 
 @enduml
