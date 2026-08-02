@@ -1,0 +1,84 @@
+@startuml BankStandart_Container
+title Банк «Стандарт» - Диаграмма контейнеров - Оформление заявки на кредит
+
+note "Для простоты и наглядности, из диаграммы исключены API Gateway, некоторые базы данных и сервисы не имеющие отношения к оформлению заявки на кредит" as scheme_note
+
+top to bottom direction
+
+!define RELATIVE_INCLUDE .
+!include ./c4-templates/C4_Container.puml
+'!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+
+Person(new_client, "Новый клиент", "Потенциальный клиент банка")
+Person(existing_client, "Текущий (существующий) клиент", "Зарегистрированный клиент банка")
+Person(front_office_man, "Сотрудник управления обслуживанием в сети отделений", "Менеджеры фронт-офиса —  сотрудники, которые работают в отделениях банка")
+Person(credit_office_man, "Сотрудник управления обслуживанием кредитных продуктов", "Менеджеры бэк-офиса, которые специализируются на кредитах")
+
+System_Boundary(bank_standart, "Банк «Стандарт»") {  
+    Container(kafka, "Kafka", "Kafka", "Брокер сообщений")
+
+    Container(site, "Сайт", "React.js + PHP", "")
+    Container(internet_bank, "Интернет-банк", "HTML,JS + ASP.NET MVC 4.5", "")
+
+    Container(abs, "АБС", "Delphi", "")
+    
+    Container(credit_req_service, "Сервис заявок на получение кредита", "Java", "Управляет заявками на кредиты от новых и текущих клиентов")
+    Container(credit_req_db, "БД сервиса заявок на получение кредита", "MS SQL", "")
+    
+    Container(credit_req_abs_adapter, "Адаптер заявок на кредит для АБС", "Java", "Формирует заявки (черновики) на кредит в АБС")
+
+    Container(credit_conv, "Кредитный конвейер", "Camunda/Java", "")
+    Container(credit_scoring, "Система кредитного скоринга", "Python", "")
+    Container(credit_scoring_light, "Отдельная система кредитного скоринга для предпроверок", "Python", "")
+    
+    Container(credit_service, "Сервис кредитов", "Java", "Хранит предложения по кредитам для разгрузки АБС")
+    Container(credit_db, "БД сервиса кредитов", "MS SQL", "")
+
+    Container(sms_service, "СМС сервис", "Java", "Содержит доп. функционал по отправке СМС через шлюз")
+}
+
+System_Ext(bki, "Бюро кредитных историй", "Возвращает кредитный скоринк клиента")
+System_Ext(sms_gate, "СМС-шлюз телеком-оператора", "Выполняет отправку СМС сообщений клиенту")
+
+Rel(new_client, site, "Просмотр общих предложений по кредитам,\nПодача заявки на получение кредита", "")
+Rel(existing_client, site, "Просмотр общих предложений по кредитам,\nПодача заявки на получение кредита,\nВвод кода подтверждения", "")
+
+Rel(existing_client, internet_bank, "Просмотр общих и персональных предложений по кредитам,\nПодача заявки на получение кредита", "")
+
+Rel(front_office_man, abs, "Формирование заявок на кредиты", "")
+
+Rel(credit_office_man, credit_conv, "Проверка и принятие решений по заявкам на кредиты", "")
+Rel(credit_conv, credit_scoring, "Определение кредитного скоринга клиента", "HTTP/REST")
+Rel(credit_scoring, bki, "Запрос кредитного скоринга клиента", "HTTP/REST")
+Rel(credit_scoring, abs, "Запрос данных клиента", "")
+
+Rel(credit_scoring, kafka, "Предодобренные предложения по кредитам", "")
+Rel(kafka, credit_service, "Предодобренные предложения по кредитам", "")
+
+Rel(site, credit_req_service, "Заявка на получение кредита", "")
+Rel(internet_bank, credit_req_service, "Заявка на получение кредита", "")
+
+Rel(site, credit_service, "Получение общих предложений по кредитам", "")
+Rel(internet_bank, credit_service, "Получение общих и персональных предложений по кредитам", "")
+
+Rel(credit_req_service, credit_scoring_light, "Запрос кредитного скоринга клиента", "HTTP/REST")
+Rel(credit_scoring_light, bki, "Запрос кредитного скоринга клиента", "HTTP/REST")
+Rel(credit_req_service, kafka, "Заявка на получение кредита", "")
+
+Rel(credit_req_service, sms_service, "Код подтверждения заявки", "")
+
+Rel(kafka, credit_req_abs_adapter, "Заявка на получение кредита", "")
+Rel(credit_req_abs_adapter, abs, "Заявка (или черновик) на получение кредита", "")
+
+Rel(kafka, credit_conv, "Заявка на получение кредита", "")
+
+Rel(credit_conv, kafka, "Актуальные ставки по кредитам", "")
+Rel(kafka, credit_service, "Актуальные ставки по кредитам", "")
+
+Rel(credit_req_service, credit_req_db, "Управляет данными", "")
+Rel(credit_service, credit_db, "Управляет данными", "")
+
+Rel(abs, sms_service, "Оповещение клиента через Anti Corruption Layer", "")
+Rel(sms_service, sms_gate, "Оповещение клиента", "")
+
+@enduml

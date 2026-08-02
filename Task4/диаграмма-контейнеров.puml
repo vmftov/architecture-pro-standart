@@ -12,7 +12,7 @@ Person(call_center_man, "Сотрудник кол-центра банка «С�
 System_Boundary(bank_standart, "Банк «Стандарт»") {  
     Container(kafka, "Kafka", "Kafka", "Брокер сообщений")
 
-    Container(deposit_service, "Сервис депозитов", "Go", "Хранит предложения по депозитам для разгрузки АБС")
+    Container(deposit_service, "Сервис депозитов", "Java", "Хранит предложения по депозитам для разгрузки АБС")
 
     Container(call_center_wabapp, "WEB приложение системы кол-центра", "React.js", "")
     Container(call_center_sys, "Система кол-центра", "Java Spring Boot", "")

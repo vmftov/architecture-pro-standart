@@ -27,7 +27,7 @@ System_Boundary(bank_standart, "Банк «Стандарт»") {
     Container(internet_bank_service, "Интернет-банк", "ASP.NET MVC 4.5", "")
     Container(internet_bank_db, "БД интернет банка", "MS SQL", "")
 
-    Container(abs_deposit_req_transfer, "Транслятор запросов на открытие депозита от текущих клиентов", "Go", "")
+    Container(abs_deposit_req_transfer, "Транслятор запросов на открытие депозита от текущих клиентов", "Java", "")
     Container(abs_deposit_req_transfer_db, "БД транслятора запросов для гарантии единственной доставки", "MS SQL", "")
     
     Container(abs, "АБС", "Delphi", "")
@@ -37,13 +37,13 @@ System_Boundary(bank_standart, "Банк «Стандарт»") {
     Container(call_center_sys, "Система кол-центра", "Java Spring Boot", "")
     Container(call_center_db, "БД системы кол-центра", "PostgreSQL", "")
 
-    Container(deposit_req_service, "Сервис заявок на открытие депозита", "Go", "Валидирует данные и управляет заявками на депозиты от новых и текущих клиентов")
+    Container(deposit_req_service, "Сервис заявок на открытие депозита", "Java", "Валидирует данные и управляет заявками на депозиты от новых и текущих клиентов")
     Container(deposit_req_db, "БД сервиса заявок на открытие депозита", "MS SQL", "")
     
-    Container(deposit_service, "Сервис депозитов", "Go", "Хранит предложения по депозитам для разгрузки АБС")
+    Container(deposit_service, "Сервис депозитов", "Java", "Хранит предложения по депозитам для разгрузки АБС")
     Container(deposit_db, "БД сервиса депозитов", "MS SQL", "")
 
-    Container(sms_service, "СМС сервис", "Go", "Содержит доп. функционал по отправке СМС через шлюз")
+    Container(sms_service, "СМС сервис", "Java", "Содержит доп. функционал по отправке СМС через шлюз")
 }
 
 System_Ext(sms_gate, "СМС-шлюз телеком-оператора", "Выполняет отправку СМС сообщений клиенту")
