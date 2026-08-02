@@ -1,0 +1,18 @@
+@startuml BankStandart_Context
+title Банк «Стандарт» - Диаграмма контекста - Передача ставок в кол-центр
+
+top to bottom direction
+
+!define RELATIVE_INCLUDE .
+!include ./c4-templates/C4_Context.puml
+'!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
+
+Person(call_center_man, "Сотрудник кол-центра банка «Стандарт»", "Выполняет консультирование клиентов по ставкам")
+
+System(bank_standart, "Банк «Стандарт»", "")
+System_Ext(partner_call_center_email, "Потчовый сервер партнерского кол-центра", "")
+
+Rel(call_center_man, bank_standart, "Просмотр данных по ставкам по депозитам", "")
+Rel(bank_standart, partner_call_center_email, "Передача данных по ставкам по депозитам", "")
+
+@enduml

@@ -1,0 +1,30 @@
+@startuml BankStandart_Context
+title Банк «Стандарт» - Диаграмма контекста
+
+top to bottom direction
+
+!define RELATIVE_INCLUDE .
+!include ./c4-templates/C4_Context.puml
+'!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Context.puml
+
+Person(new_client, "Новый клиент", "Потенциальный клиент банка")
+Person(existing_client, "Текущий (существующий) клиент", "Зарегистрированный клиент банка")
+Person(front_office_man, "Сотрудник управления обслуживанием в сети отделений", "Менеджеры фронт-офиса —  сотрудники, которые работают в отделениях банка")
+Person(deposit_office_man, "Сотрудник управления обслуживанием депозитных продуктов", "Менеджеры бэк-офиса, которые специализируются на депозитах")
+Person(credit_office_man, "Сотрудник управления обслуживанием кредитных продуктов", "Менеджеры бэк-офиса, которые специализируются на кредитах")
+Person(call_center_man, "Сотрудник кол-центра банка «Стандарт»", "Выполняет обзвон клиентов с целью уточнения выполняемых ими операций")
+
+System(bank_standart, "Банк «Стандарт»", "")
+
+System_Ext(sms_gate, "СМС-шлюз телеком-оператора", "Выполняет отправку СМС сообщений клиенту")
+
+Rel(new_client, bank_standart, "Просмотр информации,\nПодача заявок на депозиты", "")
+Rel(existing_client, bank_standart, "Просмотр информации,\nПодача заявок на депозиты,\nОткрытие текущих счетов,\nПроведение платежей", "")
+Rel(front_office_man, bank_standart, "Оформление новых клиентов,\nПолучение данных клиентов,\nОформление договоров,\nОформление заявок на депозиты", "")
+Rel(deposit_office_man, bank_standart, "ОБработка и подтверждение заявок на депозиты", "")
+Rel(credit_office_man, bank_standart, "Определение ставки по депозиту клиента", "")
+Rel(call_center_man, bank_standart, "Получение данных клиентов для обзвона и уточнения условий", "")
+
+Rel(bank_standart, sms_gate, "Отправка СМС клиентам", "Custom protocol")
+
+@enduml

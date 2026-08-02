@@ -1,0 +1,102 @@
+@startuml BankStandart_Container
+title Банк «Стандарт» - Диаграмма контейнеров
+
+top to bottom direction
+
+!define RELATIVE_INCLUDE .
+!include ./c4-templates/C4_Container.puml
+'!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+
+Person(new_client, "Новый клиент", "Потенциальный клиент банка")
+Person(existing_client, "Текущий (существующий) клиент", "Зарегистрированный клиент банка")
+Person(front_office_man, "Сотрудник управления обслуживанием в сети отделений", "Менеджеры фронт-офиса —  сотрудники, которые работают в отделениях банка")
+Person(deposit_office_man, "Сотрудник управления обслуживанием депозитных продуктов", "Менеджеры бэк-офиса, которые специализируются на депозитах")
+Person(credit_office_man, "Сотрудник управления обслуживанием кредитных продуктов", "Менеджеры бэк-офиса, которые специализируются на кредитах")
+Person(call_center_man, "Сотрудник кол-центра банка «Стандарт»", "Выполняет обзвон клиентов с целью уточнения выполняемых ими операций")
+
+System_Boundary(bank_standart, "Банк «Стандарт»") {  
+    Container(api_gateway, "API Gateway", "Kong", "Реализует функции шифрования трафика и маршрутизации запросов")
+    
+    Container(kafka, "Kafka", "Kafka", "Брокер сообщений")
+    Container(deposit_cdc_sync, "CDC сервис синхронизации предложений по депозитам", "Debezium + Kafka Connect", "Синхронизирует предложения по депозитам между АБС и сервисом пепозитов через CDC")
+
+    Container(site_webapp, "Сайт", "React.js", "")
+    Container(site_service, "Бэкенд сайта", "PHP", "")
+
+    Container(internet_bank_webapp, "WEB приложение интернет-банка", "HTML,JS", "")
+    Container(internet_bank_service, "Интернет-банк", "ASP.NET MVC 4.5", "")
+    Container(internet_bank_db, "БД интернет банка", "MS SQL", "")
+
+    Container(abs_deposit_req_transfer, "Транслятор запросов на открытие депозита от текущих клиентов", "Java", "")
+    Container(abs_deposit_req_transfer_db, "БД транслятора запросов для гарантии единственной доставки", "MS SQL", "")
+    
+    Container(abs, "АБС", "Delphi", "")
+    Container(abs_db, "БД АБС", "Oracle", "")
+    
+    Container(call_center_wabapp, "WEB приложение системы кол-центра", "React.js", "")
+    Container(call_center_sys, "Система кол-центра", "Java Spring Boot", "")
+    Container(call_center_db, "БД системы кол-центра", "PostgreSQL", "")
+
+    Container(deposit_req_service, "Сервис заявок на открытие депозита", "Java", "Валидирует данные и управляет заявками на депозиты от новых и текущих клиентов")
+    Container(deposit_req_db, "БД сервиса заявок на открытие депозита", "MS SQL", "")
+    
+    Container(deposit_service, "Сервис депозитов", "Java", "Хранит предложения по депозитам для разгрузки АБС")
+    Container(deposit_db, "БД сервиса депозитов", "MS SQL", "")
+
+    Container(sms_service, "СМС сервис", "Java", "Содержит доп. функционал по отправке СМС через шлюз")
+}
+
+System_Ext(sms_gate, "СМС-шлюз телеком-оператора", "Выполняет отправку СМС сообщений клиенту")
+
+Lay_R(bank_standart, front_office_man)
+Lay_R(bank_standart, deposit_office_man)
+Lay_R(bank_standart, credit_office_man)
+
+Lay_R(kafka, deposit_req_service)
+
+Rel(new_client, site_webapp, "Просмотр предложений по депозитам,\nПодача заявки на открытие депозита", "")
+Rel(site_webapp, api_gateway, "Запросы клиента", "HTTPS/REST")
+Rel(api_gateway, deposit_req_service, "Заявка на открытие депозита,\nКод подтверждения открытия депозита", "")
+Rel(api_gateway, site_service, "Загрузка предложений по депозитам", "")
+Rel(site_service, deposit_service, "Загрузка общих предложений по депозитам", "")
+
+Rel(existing_client, internet_bank_webapp, "Просмотр общих и персональных предложений по депозитам,\nПодача заявки на открытие депозита,\nВвод кода подтверждения", "")
+Rel(internet_bank_webapp, api_gateway, "Запросы клиента", "HTTPS/REST")
+Rel(api_gateway, internet_bank_service, "Загрузка предложений по депозитам", "")
+Rel(internet_bank_service, internet_bank_db, "Управление данными", "")
+Rel(internet_bank_service, deposit_service, "Загрузка общих и персональных предложений по депозитам", "")
+
+Rel(abs, abs_db, "Управление данными", "")
+Rel(abs, sms_service, "Оповещение клиента через Anti Corruption Layer", "")
+
+Rel(deposit_req_service, deposit_req_db, "Сохранение и управление заявками", "")
+Rel(deposit_req_service, kafka, "Заявка на открытие депозита", "")
+Rel(deposit_req_service, sms_service, "Код подтверждения открытия депозита", "")
+note left of deposit_req_service: Статус клиента (новый, старый) и телефон текущего клиента берутся из запроса/токена без обращения к АБС
+Rel(kafka, deposit_req_service, "Подтверждение обработки заявки на открытие депозита кол-центром", "")
+
+Rel(deposit_service, deposit_db, "Управление данными", "")
+
+Rel_Down(sms_service, sms_gate, "Отправка кодов подтверждения,\nОповещение клиента", "")
+
+Rel(deposit_office_man, abs, "Расчёт ставок по депозитам,\nПодтверждение депозита", "")
+Rel(credit_office_man, abs, "Определение ставок по депозитам", "")
+Rel(front_office_man, abs, "Оформление клиента,\nВедение договоров,\nФормирование заявки на депозит", "")
+
+Rel(abs_db, deposit_cdc_sync, "Изменения ставок и предложений по депозитам", "")
+Rel(deposit_cdc_sync, kafka, "Изменения ставок и предложений по депозитам", "")
+Rel(kafka, deposit_service, "Изменения ставок и предложений по депозитам", "")
+
+Rel(kafka, abs_deposit_req_transfer, "Заявка на открытие депозита от текущих (старых) клиентов", "")
+Rel(abs_deposit_req_transfer, abs_deposit_req_transfer_db, "Сохранение переданных заявок", "")
+Rel(abs_deposit_req_transfer, abs, "Заявка на открытие депозита от текущих (старых) клиентов", "")
+
+Rel(call_center_man, call_center_wabapp, "Просмотр заявок на депозиты\nПросмотр данных клиентов", "")
+Rel(call_center_wabapp, api_gateway, "Запросы сотрудника", "HTTPS/REST")
+Rel(api_gateway, call_center_sys, "Загрузка данных для WEB-приложения кол-центра", "")
+Rel(call_center_sys, call_center_db, "Управление данными", "")
+Rel(kafka, call_center_sys, "Заявка на открытие депозита", "")
+Rel(call_center_sys, kafka, "Подтверждение обработки заявки на открытие депозита кол-центром", "")
+Rel(call_center_sys, abs, "Данные (черновик) заявки на открытие депозита от новых клиентов для сотрудников фронт-офиса", "")
+
+@enduml
